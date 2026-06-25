@@ -13,7 +13,7 @@ extension ErrorHandling.Business {
             sender: any Sendable,
             data: [String: any Sendable] = [:]
         )
-        case identifyClient(accountId: UUID?)
+        case identifyClient(accountId: String?)
     }
 }
 

@@ -22,7 +22,7 @@ public final class SentryErrorHandlingProvider: ErrorHandling.Business.Provider 
         }
     }
 
-    public func identifyClient(appInstanceId: UUID, accountId: UUID?) async {
+    public func identifyClient(appInstanceId: UUID, accountId: String?) async {
         await MainActor.run {
             SentrySDK.configureScope { scope in
                 let user = User()
@@ -31,12 +31,12 @@ public final class SentryErrorHandlingProvider: ErrorHandling.Business.Provider 
                 scope.setTag(value: appInstanceId.uuidString, key: "appId")
 
                 if let accountId {
-                    scope.setTag(value: accountId.uuidString, key: "accountId")
+                    scope.setTag(value: accountId, key: "accountId")
                 }
 
                 scope.setContext(
                     value: [
-                        "accountId": accountId?.uuidString ?? "",
+                        "accountId": accountId ?? "",
                         "appId": appInstanceId.uuidString
                     ],
                     key: "account"

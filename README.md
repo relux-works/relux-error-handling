@@ -27,7 +27,7 @@ Add the package to the host app or package that owns composition:
 ```swift
 .package(
     url: "https://github.com/relux-works/relux-error-handling.git",
-    from: "1.0.0"
+    from: "2.0.0"
 )
 ```
 
@@ -84,7 +84,7 @@ await actions {
         enableDebug: false,
         env: "production"
     )
-    ErrorHandling.Business.Effect.identifyClient(accountId: accountID)
+    ErrorHandling.Business.Effect.identifyClient(accountId: firebaseUID)
     ErrorHandling.Business.Effect.sendMessage(
         "Checkout failed",
         sender: "CheckoutFlow",
@@ -92,6 +92,10 @@ await actions {
     )
 }
 ```
+
+`accountId` is intentionally a `String?` so host apps can pass their native
+identity value directly, for example a Firebase uid, backend account id, or
+RevenueCat app user id.
 
 The saga ignores unrelated Relux actions and forwards only
 `ErrorHandling.Business.Effect` values to the configured provider.

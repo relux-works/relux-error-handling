@@ -9,7 +9,7 @@ struct ReluxErrHandlingTests {
     func moduleInjectsProviderIntoSaga() async throws {
         let provider = RecordingProvider()
         let appId = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
-        let accountId = UUID(uuidString: "00000000-0000-0000-0000-000000000002")!
+        let accountId = "firebase-user-2"
 
         let module = ErrorHandling.Module(
             provider: provider,
@@ -119,7 +119,7 @@ private enum SampleError: Error, CustomStringConvertible, Sendable {
 private actor RecordingProvider: ErrorHandling.Business.Provider {
     enum Event: Equatable, Sendable {
         case configure(ErrorHandling.Business.Configuration)
-        case identify(appId: UUID, accountId: UUID?)
+        case identify(appId: UUID, accountId: String?)
         case error(description: String, data: [String: String])
         case message(message: String, sender: String, data: [String: String])
     }
@@ -130,7 +130,7 @@ private actor RecordingProvider: ErrorHandling.Business.Provider {
         events.append(.configure(configuration))
     }
 
-    func identifyClient(appInstanceId: UUID, accountId: UUID?) async {
+    func identifyClient(appInstanceId: UUID, accountId: String?) async {
         events.append(.identify(appId: appInstanceId, accountId: accountId))
     }
 
@@ -161,4 +161,3 @@ private actor RecordingProvider: ErrorHandling.Business.Provider {
         data.mapValues { String(describing: $0) }
     }
 }
-
