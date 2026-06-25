@@ -1,11 +1,29 @@
 .DS_Store
 .build/
 .swiftpm/
+Derived/
+**/Derived/
 DerivedData/
+**/DerivedData/
+.derived-data-log-*
 xcuserdata/
+**/xcuserdata/
 *.xcworkspace
+*.xcodeproj
 *.xcodeproj/project.xcworkspace/
 *.xcuserstate
 Package.resolved
 .temp/
+*.log
+logs/
+.logs/
+.logbook/
+.logbook.md
+logbook.md
+LOGBOOK.md
+.flight-logbook/
 
+# Local planning and specification artifacts
+.spec/
+.task-board/
+task-board.config.json

@@ -1,26 +1,115 @@
-# relux-error-handling
+# Relux Error Handling
 
-Reusable Relux error handling for Swift packages and iOS host apps.
+Relux Error Handling is a Swift package that gives Relux-based applications a
+small, provider-driven error-handling module. The core product exposes only the
+Relux abstraction. The Sentry integration is isolated in a separate product so
+feature modules can dispatch diagnostics effects without depending on Sentry.
 
 ## Products
 
-- `ReluxErrHandling`: Relux-facing abstraction. It defines `ErrorHandling.Business.Effect`, provider protocols, `ErrorHandling.Module`, and `ErrorHandling.Business.Saga`. It does not depend on Sentry.
-- `ReluxSentryProvider`: Sentry-backed provider implementation. It is the only product that depends on `getsentry/sentry-cocoa`.
+| Product | Purpose | Sentry dependency |
+| --- | --- | --- |
+| `ReluxErrHandling` | Defines `ErrorHandling.Business.Effect`, provider protocols, `ErrorHandling.Module`, and `ErrorHandling.Business.Saga`. | No |
+| `ReluxSentryProvider` | Provides `SentryErrorHandlingProvider`, an implementation of `ErrorHandling.Business.Provider`. | Yes |
 
-## Usage
+## Requirements
+
+- Swift 6.2
+- iOS 16+
+- macOS 10.15+
+- Relux 9.2+
+- Sentry Cocoa 9.19.0 for `ReluxSentryProvider`
+
+## Installation
+
+Add the package to the host app or package that owns composition:
 
 ```swift
-import ReluxErrHandling
-import ReluxSentryProvider
-
-let provider = SentryErrorHandlingProvider()
-let module = ErrorHandling.Module(
-    provider: provider,
-    appIdProvider: appIdProvider
+.package(
+    url: "https://github.com/relux-works/relux-error-handling.git",
+    from: "1.0.0"
 )
 ```
 
-Register `module` with the host app's Relux composition. Feature modules should depend on `ReluxErrHandling` and dispatch `ErrorHandling.Business.Effect` values. The host app owns the concrete provider wiring.
+Feature packages that only dispatch diagnostics effects should depend on
+`ReluxErrHandling`. Host applications that provide the concrete implementation
+should depend on both `ReluxErrHandling` and `ReluxSentryProvider`.
+
+## Architecture
+
+The module is intentionally split into two dependency layers:
+
+- `ReluxErrHandling` is the abstraction layer. It knows about Relux effects,
+  sagas, and provider protocols, but has no Sentry imports.
+- `ReluxSentryProvider` is the implementation layer. It adapts
+  `SentryErrorHandlingProvider` to the abstract provider protocol.
+- The host app resolves the concrete provider and injects it into
+  `ErrorHandling.Module`.
+- Relux feature modules dispatch `ErrorHandling.Business.Effect` values through
+  Relux's normal action dispatching.
+
+## Host App Wiring
+
+Register the provider and module in the host application's composition root:
+
+```swift
+import Relux
+import ReluxErrHandling
+import ReluxSentryProvider
+
+let provider: any ErrorHandling.Business.Provider = SentryErrorHandlingProvider()
+let appIDProvider: any ErrorHandling.Business.AppIDProvider = AppIDProvider()
+
+let errorHandlingModule = ErrorHandling.Module(
+    provider: provider,
+    appIdProvider: appIDProvider
+)
+
+await Relux(
+    logger: logger,
+    appStore: store,
+    rootSaga: rootSaga
+)
+.register {
+    errorHandlingModule
+}
+```
+
+Initialize and send diagnostics through regular Relux actions:
+
+```swift
+await actions {
+    ErrorHandling.Business.Effect.initialize(
+        withKey: sentryDSN,
+        enableDebug: false,
+        env: "production"
+    )
+    ErrorHandling.Business.Effect.identifyClient(accountId: accountID)
+    ErrorHandling.Business.Effect.sendMessage(
+        "Checkout failed",
+        sender: "CheckoutFlow",
+        data: ["screen": "checkout"]
+    )
+}
+```
+
+The saga ignores unrelated Relux actions and forwards only
+`ErrorHandling.Business.Effect` values to the configured provider.
+
+## Validation
+
+Run package tests:
+
+```bash
+swift test
+```
+
+Validate iOS simulator builds for both products:
+
+```bash
+xcodebuild -scheme ReluxErrHandling -destination 'generic/platform=iOS Simulator' build
+xcodebuild -scheme ReluxSentryProvider -destination 'generic/platform=iOS Simulator' build
+```
 
 ## Tools
 
@@ -28,11 +117,11 @@ Register `module` with the host app's Relux composition. Feature modules should 
 | --- | --- | --- | --- |
 | SwiftPM | Resolve, build, and test the package on the host platform | `swift test` | Build products under `.build/`; captured logs go in `.temp/` |
 | xcodebuild | Validate iOS Simulator builds for package products | `xcodebuild -scheme ReluxErrHandling -destination 'generic/platform=iOS Simulator' build` and `xcodebuild -scheme ReluxSentryProvider -destination 'generic/platform=iOS Simulator' build` | Derived data under `DerivedData/` or `.temp/DerivedData-*`; captured logs go in `.temp/` |
-| task-board | Local task tracking | `task-board q --format compact 'summary()'` | Board files under `.task-board/` |
-| GitHub CLI | Create and inspect the GitHub repository | `gh repo view relux-works/relux-error-handling` | Remote repository metadata on GitHub |
-| git | Version control, tags, and remotes | `git status --short --branch` | Local `.git/` state; pushed branch and tags on `origin` |
-| ripgrep | Verify dependency boundaries and source text audits | `rg -n "Sentry" Sources/ReluxErrHandling` | Terminal output; captured audit logs should go in `.temp/` when needed |
+| gh | GitHub repository management | `gh repo view relux-works/relux-error-handling` | Remote repository metadata on GitHub |
+| git | Version control, release tags, and remotes | `git status --short --branch`, `git tag --list` | Local `.git/` state; pushed branch and tags on `origin` |
+| rg | Source and dependency-boundary audits | `rg -n "Sentry" Sources/ReluxErrHandling` | Terminal output or captured logs under `.temp/` |
 
-## Architecture
+## License
 
-See [.spec/architecture.md](.spec/architecture.md).
+Relux Error Handling is released under the Apache License, Version 2.0. See
+[LICENSE](LICENSE) and [NOTICE](NOTICE).
