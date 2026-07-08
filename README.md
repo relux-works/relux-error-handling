@@ -125,6 +125,23 @@ xcodebuild -scheme ReluxSentryProvider -destination 'generic/platform=iOS Simula
 | git | Version control, release tags, and remotes | `git status --short --branch`, `git tag --list` | Local `.git/` state; pushed branch and tags on `origin` |
 | rg | Source and dependency-boundary audits | `rg -n "Sentry" Sources/ReluxErrHandling` | Terminal output or captured logs under `.temp/` |
 
+<!-- relux-ecosystem:start -->
+
+## About Relux Works
+
+This project is part of the open-source ecosystem of
+[Relux Works](https://relux.works), an AI-native software development studio.
+We build fixed-price MVPs, rescue vibe-coded apps, run local AI inference, and
+train teams to work with coding agents — and we open-source much of the
+infrastructure behind it.
+
+- Full catalog: [relux.works/en/open-source](https://relux.works/en/open-source/)
+- Agentic enablement: [agent harnesses & team training](https://relux.works/en/agentic-enablement/)
+- Hire us the agent-native way — point your assistant at `https://api.relux.works/mcp`
+- Contact: ivan@relux.works
+
+<!-- relux-ecosystem:end -->
+
 ## License
 
 Relux Error Handling is released under the Apache License, Version 2.0. See
